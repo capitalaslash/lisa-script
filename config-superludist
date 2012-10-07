@@ -1,0 +1,50 @@
+#!/bin/bash
+
+LIB_NAME="superludist"
+LIB_VERSION="3.1"
+
+source ${HOME}/script/select-compiler
+
+BUILD_DIR=${HOME}/lib/${COMPILER}/${LIB_NAME}-build
+SOURCE_DIR=${HOME}/lib/SuperLU_DIST_$LIB_VERSION
+INSTALL_DIR=${HOME}/lib/${COMPILER}/${LIB_NAME}-$LIB_VERSION
+
+CXX_FLAGS="${CXX_FLAGS_OPT}"
+C_FLAGS=${CXX_FLAGS_OPT}
+Fortran_FLAGS=${Fortran_FLAGS_OPT}
+LIBS_DIR="${HOME}/lib/${COMPILER}"
+
+mkdir -p ${BUILD_DIR}
+pushd ${BUILD_DIR}
+
+ln -s ${SOURCE_DIR}/MAKE_INC/make.i386_linux make.inc
+
+mkdir -p static
+pushd static
+
+make -f ${SOURCE_DIR}/SRC/Makefile \
+    VPATH=${SOURCE_DIR}/SRC \
+    CC="${MPI_ROOT}/bin/mpicc" \
+    FORTRAN="${MPI_ROOT}/bin/mpif90" \
+    CFLAGS="$C_FLAGS" \
+    FFLAGS="$Fortran_FLAGS" \
+    PLAT="" \
+    BLASDEF="" \
+    METISLIB="-L${LIBS_DIR}/ParMetis-install/lib -lmetis" \
+    PARMETISLIB="-L${LIBS_DIR}/ParMetis-install/lib -lparmetis" \
+    BLASLIB="/data/libs/blas/${COMPILER}/${FPIC_BLAS}" \
+    CDEFS="-DAdd_" NOOPTS="-fPIC" \
+    ARCH="${MYAR}" ARCHFLAGS="cr" RANLIB="ranlib" \
+    DSUPERLULIB=${BUILD_DIR}/static/lib${LIB_NAME}.a || return 1
+
+popd
+
+# Installing
+mkdir -p ${INSTALL_DIR}
+pushd ${INSTALL_DIR}
+install -d -m 775 -g lifev {lib,include,include/superludist}
+install -m 664 -g lifev ${BUILD_DIR}/static/lib${LIB_NAME}.a lib
+install -m 664 ${SOURCE_DIR}/SRC/*.h include/superludist
+popd
+
+popd

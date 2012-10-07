@@ -1,0 +1,69 @@
+#!/bin/bash
+
+LIB_NAME="lifev"
+
+source ${HOME}/script/select-compiler
+
+# general
+if [ "${LIFEV_USER}x" = "x" ]
+then
+  echo "LIFEV_USER must be set";
+  return 1;
+fi
+
+if [ "${METHOD}x" = "x" ]
+then
+  export METHOD=opt
+fi
+
+echo "###################################"
+echo "configuring in ${METHOD} METHOD..."
+echo "###################################"
+
+# lifev paths
+BUILD_DIR=${HOME}/${LIFEV_USER}/${COMPILER}/build-${METHOD}
+SOURCE_DIR=${HOME}/${LIFEV_USER}/${LIB_NAME}
+INSTALL_DIR=${HOME}/${LIFEV_USER}/${COMPILER}/install-${METHOD}
+
+# libraries
+LIFEV_BOOST="/data/libs_exa/boost/1.48.0/gnu"
+LIFEV_TRILINOS="${HOME}/lib/${COMPILER}/trilinos-install"
+LIFEV_SUITESPARSE="${HOME}/lib/${COMPILER}/suitesparse-install"
+
+# flags
+LINKER_FLAGS="-lgfortran -lpthread ${LIFEV_SUITESPARSE}/lib/libcholmod.a ${LIFEV_SUITESPARSE}/lib/libcolamd.a ${LIFEV_SUITESPARSE}/lib/libcamd.a ${LIFEV_SUITESPARSE}/lib/libccolamd.a"
+LINKER_FLAGS+=${LINK_OPTION}
+CXX_FLAGS="-DH5_USE_16_API "
+
+if [ ${METHOD} = opt ]; then
+  LIFEV_BUILD_TYPE="Release"
+  CXX_FLAGS+=${CXX_FLAGS_OPT}
+elif [ ${METHOD} = dbg ]; then
+  LIFEV_BUILD_TYPE="Debug"
+  CXX_FLAGS+=${CXX_FLAGS_DBG}
+elif [ ${METHOD} = prof ]; then
+  LIFEV_BUILD_TYPE="Release"
+  CXX_FLAGS+="-O3 -pg -msse -msse2 -mtune=native -march=native"
+else
+  echo "${METHOD} METHOD not recognized"; return 1
+fi
+
+mkdir -p ${BUILD_DIR}
+cd ${BUILD_DIR}
+rm -f CMakeCache.txt
+
+#/data/apps/bin/Cmake/cmake-2.8.0/bin/cmake \
+cmake \
+  -D CMAKE_INSTALL_PREFIX:PATH="${INSTALL_DIR}" \
+  -D CMAKE_C_COMPILER:STRING="${MPI_ROOT}/bin/mpicc" \
+  -D CMAKE_CXX_COMPILER:STRING="${MPI_ROOT}/bin/mpicxx" \
+  -D CMAKE_Fortran_COMPILER:STRING="${MPI_ROOT}/bin/mpif90" \
+  -D CMAKE_CXX_FLAGS:STRING="${CXX_FLAGS}" \
+  -D CMAKE_BUILD_TYPE:STRING="${LIFEV_BUILD_TYPE}" \
+  -D CMAKE_AR:PATH="${MYAR}" \
+  -D BOOST_ROOT:PATH="${LIFEV_BOOST}" \
+  -D LIFE_USE_QHULL:BOOL=TRUE \
+  -D QHULL_ROOT:PATH="${HOME}/lib/${COMPILER}/qhull-install" \
+  -D Trilinos_ROOT:PATH="${LIFEV_TRILINOS}" \
+  -D LIFE_EXTRA_LINK_LINE:STRING="${LINKER_FLAGS}" \
+   ${SOURCE_DIR} $* #--trace 1>&2 2>cmake.log

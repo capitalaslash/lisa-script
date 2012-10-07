@@ -1,0 +1,80 @@
+#!/bin/bash
+
+LIB_NAME="lifev"
+
+source ${HOME}/script/select-compiler
+
+# general
+if [ "${LIFEV_USER}x" = "x" ]
+then
+  echo "LIFEV_USER must be set";
+  return 1;
+fi
+
+if [ "${METHOD}x" = "x" ]
+then
+  export METHOD=opt
+fi
+
+echo "###################################"
+echo "configuring in ${METHOD} METHOD..."
+echo "###################################"
+
+# lifev paths
+BUILD_DIR=${HOME}/${LIFEV_USER}/${COMPILER}/build-${METHOD}
+SOURCE_DIR=${HOME}/${LIFEV_USER}/${LIB_NAME}
+INSTALL_DIR=${HOME}/${LIFEV_USER}/${COMPILER}/install-${METHOD}
+
+# libraries
+LIFEV_BOOST="/data/libs/boost/boost_1_36_0"
+LIFEV_TRILINOS="${HOME}/lib/${COMPILER}/trilinos-install"
+LIFEV_PARMETIS="/data/apps/bin/life_pacchetti/openmpi-${COMPILER}/ParMetis-3.1"
+LIFEV_BLAS="/data/libs/blas/${COMPILER}/${FPIC_BLAS}/libblas.a"
+LIFEV_LAPACK="/data/libs/lapack/3.3.1/${COMPILER}/${FPIC_LAPACK}/liblapack.a"
+LIFEV_SUITESPARSE="${HOME}/lib/${COMPILER}/suitesparse-install"
+LIFEV_HDF5="${HOME}/lib/${COMPILER}/hdf5-install"
+
+# flags
+LINKER_FLAGS="-lgfortran -lpthread"
+CXX_FLAGS="-DH5_USE_16_API "
+
+if [ ${METHOD} = opt ]; then
+  LIFEV_BUILD_TYPE="Release"
+  CXX_FLAGS+=${CXX_FLAGS_OPT}
+elif [ ${METHOD} = dbg ]; then
+  LIFEV_BUILD_TYPE="Debug"
+  CXX_FLAGS+=${CXX_FLAGS_DBG}
+elif [ ${METHOD} = prof ]; then
+  LIFEV_BUILD_TYPE="Release"
+  CXX_FLAGS+="-O3 -pg -msse -msse2 -mtune=native -march=native"
+else
+  echo "${METHOD} METHOD not recognized"; return 1
+fi
+
+mkdir -p ${BUILD_DIR}
+cd ${BUILD_DIR}
+rm -f CMakeCache.txt
+
+/data/apps/bin/Cmake/cmake-2.8.0/bin/cmake \
+  -D CMAKE_INSTALL_PREFIX:PATH="${INSTALL_DIR}" \
+  -D CMAKE_C_COMPILER:STRING="${MPI_ROOT}/bin/mpicc" \
+  -D CMAKE_CXX_COMPILER:STRING="${MPI_ROOT}/bin/mpicxx" \
+  -D CMAKE_CXX_FLAGS:STRING="${CXX_FLAGS}" \
+  -D CMAKE_BUILD_TYPE:STRING="${LIFEV_BUILD_TYPE}" \
+  -D BOOST_ROOT:PATH="${LIFEV_BOOST}" \
+  -D PARMETIS_ROOT:PATH="${LIFEV_PARMETIS}" \
+  -D Trilinos_ROOT:PATH="${LIFEV_TRILINOS}" \
+  -D LIFE_USE_UMFPACK:BOOL=TRUE \
+  -D UMFPACK_ROOT:PATH="${LIFEV_SUITESPARSE}" \
+  -D BLAS_LIBRARIES:PATH="${LIFEV_BLAS}" \
+  -D LAPACK_LIBRARIES:PATH="${LIFEV_LAPACK}" \
+  -D LIFE_USE_SPIRIT_PARSER:BOOL=FALSE \
+  -D LIFE_USE_HDF5:BOOL=TRUE \
+  -D HDF5_LIBRARIES:PATH="${LIFEV_HDF5}/lib/libhdf5.a" \
+  -D HDF5_INCLUDE_DIRS:PATH="${LIFEV_HDF5}/include" \
+  -D HDF5_INCLUDE_DIR:PATH="${LIFEV_HDF5}/include" \
+  -D LIFE_EXTRA_LINK_LINE:STRING="${LINKER_FLAGS}" \
+   ${SOURCE_DIR} $* #--trace 1>&2 2>cmake.log
+
+#  -D HDF5_ROOT:PATH="${LIFEV_HDF5}" \
+

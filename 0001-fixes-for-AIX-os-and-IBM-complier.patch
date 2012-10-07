@@ -1,0 +1,106 @@
+From 3226dbfe18fdf2236fba8b8e9b93dfd7494a6518 Mon Sep 17 00:00:00 2001
+From: Nur Fadel <nur.fadel@mail.polimi.it>
+Date: Wed, 21 Sep 2011 15:10:32 +0000
+Subject: [PATCH] fixes for AIX os and IBM complier
+
+---
+ CMakeLists.txt                    |   13 ++++++++-----
+ cmake/FindPARMETIS.cmake          |    5 ++++-
+ life/lifefunctions/CMakeLists.txt |    4 ++--
+ 3 files changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 05b15bb..902d98f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -46,11 +46,11 @@ set (CMAKE_C_FLAGS "")
+ set (CMAKE_CXX_FLAGS_SAVED ${CMAKE_CXX_FLAGS})
+ set (CMAKE_CXX_FLAGS "")
+ 
+-set (CMAKE_C_FLAGS_DEBUG "-Wall -g")
++set (CMAKE_C_FLAGS_DEBUG "-O0 -g")
+ set (CMAKE_C_FLAGS_RELEASE "-O2")
+ set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${CMAKE_C_FLAGS_SAVED}")
+ set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${CMAKE_C_FLAGS_SAVED}")
+-set (CMAKE_CXX_FLAGS_DEBUG "-Wall -g")
++set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+ set (CMAKE_CXX_FLAGS_RELEASE "-O2")
+ set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS_SAVED}")
+ set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${CMAKE_CXX_FLAGS_SAVED}")
+@@ -80,7 +80,7 @@ if (NOT LIFE_USE_MPI_WRAPPER)
+ endif()
+ 
+ # Trilinos
+-find_package (Trilinos COMPONENTS anasazi belos ml ifpack aztecoo amesos zoltan epetraext teuchos epetra REQUIRED)
++find_package (Trilinos COMPONENTS ml ifpack aztecoo amesos epetraext teuchos epetra triutils REQUIRED)
+ if (Trilinos_FOUND)
+     if (Trilinos_amesos_FOUND)
+         set (HAVE_TRILINOS_AMESOS TRUE)
+@@ -112,6 +112,9 @@ if (Trilinos_FOUND)
+     if (Trilinos_zoltan_FOUND)
+         set (HAVE_TRILINOS_ZOLTAN TRUE)
+     endif()
++    if (Trilinos_triutils_FOUND)
++    set (HAVE_TRILINOS_TRIUTILS TRUE)
++    endif()
+     include_directories (${Trilinos_INCLUDE_DIR})
+     set (LIBS ${LIBS} ${Trilinos_LIBRARIES})
+ endif()
+@@ -213,8 +216,8 @@ string (COMPARE EQUAL ${CMAKE_BUILD_TYPE} "Debug" HAVE_LIFEV_DEBUG)
+ string (COMPARE EQUAL ${CMAKE_BUILD_TYPE} "Release" HAVE_LIFEV_OPTO3)
+ 
+ check_include_files(dlfcn.h HAVE_DLFCN_H)
+-check_include_files(inttypes.h HAVE_INTTYPES_H)
+-check_include_files(stdint.h HAVE_STDINT_H)
++#check_include_files(inttypes.h HAVE_INTTYPES_H)
++#check_include_files(stdint.h HAVE_STDINT_H)
+ check_include_files(stdlib.h HAVE_STDLIB_H)
+ check_include_files(memory.h HAVE_MEMORY_H)
+ check_include_files(strings.h HAVE_STRINGS_H)
+diff --git a/cmake/FindPARMETIS.cmake b/cmake/FindPARMETIS.cmake
+index a2cced1..ce0cd6b 100644
+--- a/cmake/FindPARMETIS.cmake
++++ b/cmake/FindPARMETIS.cmake
+@@ -12,18 +12,21 @@
+ 
+ FIND_PATH(PARMETIS_INCLUDE_DIR parmetis.h
+   ${PARMETIS_ROOT}/include
++  ${PARMETIS_ROOT}
+   /usr/local/include
+   /usr/include
+   )
+ 
+ FIND_LIBRARY(PARMETIS_LIBRARY parmetis
+   ${PARMETIS_ROOT}/lib
++  ${PARMETIS_ROOT}
+   /usr/local/lib
+   /usr/lib
+   )
+ 
+ FIND_LIBRARY(METIS_LIBRARY metis
+   ${PARMETIS_ROOT}/lib
++  ${PARMETIS_ROOT}
+   /usr/local/lib
+   /usr/lib
+   )
+@@ -33,4 +36,4 @@ IF(PARMETIS_INCLUDE_DIR)
+     SET( PARMETIS_LIBRARIES ${PARMETIS_LIBRARY} ${METIS_LIBRARY})
+     SET( PARMETIS_FOUND "YES" )
+   ENDIF(PARMETIS_LIBRARY)
+-ENDIF(PARMETIS_INCLUDE_DIR)
+\ No newline at end of file
++ENDIF(PARMETIS_INCLUDE_DIR)
+diff --git a/life/lifefunctions/CMakeLists.txt b/life/lifefunctions/CMakeLists.txt
+index e746075..26b1217 100644
+--- a/life/lifefunctions/CMakeLists.txt
++++ b/life/lifefunctions/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-add_library (lifefunctions BCInterfaceFunctionSolverDefined.cpp OneDimensionalFunctionSolverDefined.cpp RossEthierSteinmanDec.cpp RossEthierSteinmanInc.cpp Womersley.cpp)
++add_library (lifefunctions BCInterfaceFunctionSolverDefined.cpp OneDimensionalFunctionSolverDefined.cpp RossEthierSteinmanDec.cpp RossEthierSteinmanInc.cpp Womersley.cpp bessel/bessik.cpp bessel/bessjy.cpp bessel/cbessik.cpp bessel/cbessjy.cpp bessel/gamma.cpp)
+ install (TARGETS lifefunctions DESTINATION lib)
+-install (FILES BCInterfaceFactory.hpp BCInterfaceFunction.hpp BCInterfaceFunctionParserFile.hpp BCInterfaceFunctionParserFileSolver.hpp BCInterfaceFunctionParser.hpp BCInterfaceFunctionParserSolver.hpp BCInterfaceFunctionSolverDefined.hpp BCInterfaceFunctionUserDefined.hpp OneDimensionalFunction.hpp OneDimensionalFunctionSolverDefined.hpp RossEthierSteinmanDec.hpp RossEthierSteinmanInc.hpp Womersley.hpp DESTINATION include/life/lifefunctions)
++install (FILES BCInterfaceFactory.hpp BCInterfaceFunction.hpp BCInterfaceFunctionParserFile.hpp BCInterfaceFunctionParserFileSolver.hpp BCInterfaceFunctionParser.hpp BCInterfaceFunctionParserSolver.hpp BCInterfaceFunctionSolverDefined.hpp BCInterfaceFunctionUserDefined.hpp OneDimensionalFunction.hpp OneDimensionalFunctionSolverDefined.hpp RossEthierSteinmanDec.hpp RossEthierSteinmanInc.hpp Womersley.hpp bessel/bessel.hpp DESTINATION include/life/lifefunctions)
+ 
+-- 
+1.7.5.1
+

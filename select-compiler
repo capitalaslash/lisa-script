@@ -1,0 +1,59 @@
+#!/bin/bash
+
+if $(uname -a | grep "lagrange" 1>/dev/null 2>&1)
+then
+    echo "You must be on a compile node, use the command compile_node"
+    return 1
+fi
+
+if [ "${MYCOMPILER}x" = "x" ]
+then
+  MYCOMPILER=${PWD}
+else
+  echo $MYCOMPILER
+fi
+
+if $(echo ${MYCOMPILER} | grep "gnu" 1>/dev/null 2>&1)
+then
+  export COMPILER="gnu"
+  export CXX_FLAGS_OPT="-O3 -msse3 -ansi"
+  export C_FLAGS_OPT=${CXX_FLAGS_OPT}
+  export Fortran_FLAGS_OPT=${CXX_FLAGS_OPT}
+  export CXX_FLAGS_DBG="-O0 -g"
+  export C_FLAGS_DBG=${CXX_FLAGS_DBG}
+  export Fortran_FLAGS_DBG=${CXX_FLAGS_DBG}
+  export FPIC_BLAS=fPIC_option/lib
+  export FPIC_LAPACK=fPIC_Option/lib
+  export MYAR="/usr/bin/ar"
+  export FORTRAN_LIB="gfortran"
+
+elif $(echo ${MYCOMPILER} | grep "intel" 1>/dev/null 2>&1)
+then
+  export COMPILER="intel"
+  export CXX_FLAGS_OPT="-O3 -xHOST -ansi"
+  export C_FLAGS_OPT=${CXX_FLAGS_OPT}
+  export Fortran_FLAGS_OPT="-O3 -xHOST"
+  export CXX_FLAGS_DBG="-O0 -g"
+  export C_FLAGS_DBG=${CXX_FLAGS_DBG}
+  export Fortran_FLAGS_DBG=${CXX_FLAGS_DBG}
+  export FPIC_BLAS=lib_fpic_option
+  export FPIC_LAPACK=${FPIC_BLAS}
+#  export AR="/usr/bin/ar"
+  export MYAR="/data/apps/bin/Intel/cltoolkit/Compiler/11.1/073/bin/intel64/xiar"
+  export FORTRAN_LIB="ifcore"
+
+else
+    echo "Compiler not recognized"
+    unset MYCOMPILER
+    return 1
+fi
+
+unset MYCOMPILER
+
+echo "${COMPILER} compiler selected"
+
+source ${HOME}/script/xopenmpi_${COMPILER}.sh
+
+#export LINK_OPTION=" -Wl,--start-group  ${MKLROOT}/lib/em64t/libmkl_intel_lp64.a \
+#                    ${MKLROOT}/lib/em64t/libmkl_intel_thread.a \
+#                    ${MKLROOT}/lib/em64t/libmkl_core.a -Wl,--end-group -openmp -lpthread"

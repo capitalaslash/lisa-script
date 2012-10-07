@@ -1,0 +1,33 @@
+#! /bin/bash
+
+USERS=(
+  alessio
+  antonio
+  francesco
+  guido
+  luca
+  nur
+  massimiliano
+)
+
+NUM_USERS=${#USERS[@]}
+
+unset LIFEV_USER
+
+PWDNOHOME=${PWD/$HOME\/}
+LIFEV_USER=${PWDNOHOME/\/*}
+
+found=no
+for (( i=0; i < $NUM_USERS; i++ )); do
+  if [ ${USERS[$i]} = $LIFEV_USER ]; then
+    found=yes
+  fi
+done
+
+if [ $found = no ]; then
+  echo "user not recognized"
+  return 1
+else
+  export LIFEV_USER
+fi
+

@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+### Job name
+#PBS -N example_impes
+### Queue name
+#PBS -q lisa
+### Number of nodes
+#PBS -l select=4:ncpus=4
+echo "Working dir is $PBS_O_WORKDIR"
+cd $PBS_O_WORKDIR
+echo "Running on `hostname`"
+echo "Dir is `pwd`"
+echo "Time is $(date)"
+echo "Running on "
+echo `cat $PBS_NODEFILE`
+NPROCS=`wc -l < $PBS_NODEFILE`
+
+FOLDER=prova2
+
+OUT=${FOLDER}/${PBS_JOBID/.manager/}.out
+ERROR=${FOLDER}/${PBS_JOBID/.manager/}.err
+
+EXE=example_impes
+DATA=${FOLDER}/data16bis
+
+source $HOME/script/xopenmpi_gnu.sh
+mpirun -machinefile $PBS_NODEFILE -np $NPROCS $EXE -f $DATA 1> $OUT 2> $ERROR

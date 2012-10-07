@@ -1,0 +1,43 @@
+#!/bin/bash
+
+LIB_NAME="SuiteSparse"
+LIB_VERSION="3.6.1"
+
+source ${HOME}/script/select-compiler
+
+BUILD_DIR=${HOME}/lib/${COMPILER}/${LIB_NAME}-build
+SOURCE_DIR=${HOME}/lib/${LIB_NAME}
+export INSTALL_DIR=${HOME}/lib/${COMPILER}/suitesparse-install
+
+mkdir -p ${INSTALL_DIR}/include
+mkdir -p ${INSTALL_DIR}/lib
+
+cd ${SOURCE_DIR}
+
+#sed -e 's/(METIS_PATH)\/Lib/(METIS_PATH)/g' -i CHOLMOD/Lib/Makefile
+#sed -e 's/(METIS_PATH)\/Lib/(METIS_PATH)/g' -i CHOLMOD/Tcov/Makefile
+
+cp ${SOURCE_DIR}/CHOLMOD/Lib/Makefile ${SOURCE_DIR}/CHOLMOD/Lib/Makefile.bak
+cp ~/script/suitesparse/CHOLMOD/Lib/Makefile ${SOURCE_DIR}/CHOLMOD/Lib/Makefile
+
+cp ${SOURCE_DIR}/CHOLMOD/Tcov/Makefile ${SOURCE_DIR}/CHOLMOD/Lib/Makefile.bak
+cp ~/script/suitesparse/CHOLMOD/Tcov/Makefile ${SOURCE_DIR}/CHOLMOD/Lib/Makefile
+
+cp ${SOURCE_DIR}/UFconfig/UFconfig.mk ${SOURCE_DIR}/UFconfig/UFconfig.mk.bak
+cp ~/script/suitesparse/UFconfig/UFconfig.mk ${SOURCE_DIR}/UFconfig/UFconfig.mk
+
+make clean
+cd UFconfig
+make purge
+make clean
+cd ..
+make
+make install
+
+cp ${SOURCE_DIR}/CHOLMOD/Lib/Makefile.bak ${SOURCE_DIR}/CHOLMOD/Lib/Makefile
+
+cp ${SOURCE_DIR}/CHOLMOD/Lib/Makefile.bak ${SOURCE_DIR}/CHOLMOD/Tcov/Makefile
+
+cp ${SOURCE_DIR}/UFconfig/UFconfig.mk.bak ${SOURCE_DIR}/UFconfig/UFconfig.mk
+
+unset INSTALL_DIR

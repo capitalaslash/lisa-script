@@ -1,0 +1,75 @@
+#!/bin/bash
+
+LIB_NAME="lifev"
+
+source ${HOME}/script/select-compiler
+
+# general
+if [ "${LIFEV_USER}x" = "x" ]
+then
+  echo "LIFEV_USER must be set";
+  return 1;
+fi
+
+if [ "${METHOD}x" = "x" ]
+then
+  export METHOD=opt
+fi
+
+echo "###################################"
+echo "configuring in ${METHOD} METHOD..."
+echo "###################################"
+
+# lifev paths
+BUILD_DIR=${HOME}/${LIFEV_USER}/${COMPILER}/build-${METHOD}
+SOURCE_DIR=${HOME}/${LIFEV_USER}/${LIB_NAME}
+INSTALL_DIR=${HOME}/${LIFEV_USER}/${COMPILER}/install-${METHOD}
+
+# libraries
+LIFEV_BOOST="/data/libs_exa/boost/1.48.0/gnu"
+LIFEV_TRILINOS="${HOME}/lib/${COMPILER}/trilinos-install"
+LIFEV_SUITESPARSE="${HOME}/lib/${COMPILER}/suitesparse-install"
+LIBS_DIR="${HOME}/lib/${COMPILER}"
+
+# flags
+LINKER_FLAGS="-lz -L${LIFEV_SUITESPARSE}/lib -lcholmod -lcolamd -lcamd -lccolamd"
+LINKER_FLAGS+=${LINK_OPTION}
+CXX_FLAGS="-DH5_USE_16_API "
+
+if [ ${METHOD} = opt ]; then
+  LIFEV_BUILD_TYPE="Release"
+  CXX_FLAGS+=${CXX_FLAGS_OPT}
+elif [ ${METHOD} = dbg ]; then
+  LIFEV_BUILD_TYPE="Debug"
+  CXX_FLAGS+=${CXX_FLAGS_DBG}
+elif [ ${METHOD} = prof ]; then
+  LIFEV_BUILD_TYPE="Release"
+  CXX_FLAGS+="-O3 -pg -msse -msse2 -mtune=native -march=native"
+else
+  echo "${METHOD} METHOD not recognized"; return 1
+fi
+
+mkdir -p ${BUILD_DIR}
+cd ${BUILD_DIR}
+
+${SOURCE_DIR}/configure --prefix="${INSTALL_DIR}" \
+  CC="${MPI_ROOT}/bin/mpicc" \
+  CXX="${MPI_ROOT}/bin/mpicxx" \
+  FC="${MPI_ROOT}/bin/mpif90" \
+  F77="${MPI_ROOT}/bin/mpif90" \
+  CFLAGS="${CXX_FLAGS}" \
+  CXXFLAGS="${CXX_FLAGS}" \
+  --disable-shared \
+  --enable-static \
+  --with-parmetis="${LIBS_DIR}/ParMetis-install" \
+  --with-boost="${LIFEV_BOOST}" \
+  --with-trilinos="${LIFEV_TRILINOS}" \
+  --with-hdf5="${LIBS_DIR}/hdf5-install" \
+  --with-umfpack="${LIFEV_SUITESPARSE}" \
+  --with-amd="${LIFEV_SUITESPARSE}" \
+  --with-lapack-link-libs="-L/data/libs/lapack/3.3.1/${COMPILER}/${FPIC_LAPACK} -llapack -L/data/libs/blas/${COMPILER}/${FPIC_BLAS} -lblas -l${FORTRAN_LIB} -lpthread" \
+  --with-extra-ldflags="-lcholmod -lcolamd -lcamd -lccolamd -llapack -lblas" \
+  || echo "configure failed"
+
+  #LDFLAGS="${LINKER_FLAGS}" \
+

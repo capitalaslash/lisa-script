@@ -1,0 +1,51 @@
+#!/bin/bash
+
+if [ "$METHOD" = "" ]; then export METHOD=opt; fi
+echo "###################################"
+echo "configuring in $METHOD METHOD..."
+echo "###################################"
+
+export LIFEV_HOME="${HOME}/${USER}"
+export LIFEV_BUILD="${LIFEV_HOME}/build-${METHOD}"
+
+export REPO1="/home/shares/lifev/life_pacchetti"
+export REPO2="/data/apps/bin/life_pacchetti/openmpi-gnu"
+
+export TRILINOS_HOME="${REPO1}/trilinos-10-6-4-Install"
+export LIFEV_LDFLAGS=""
+
+if   [ $METHOD = opt ]; then
+  export LIFEV_CXXFLAGS="-O3 -mtune=native -march=native -msse -msse2"
+  export LIFEV_FLAGS=""
+elif [ $METHOD = dbg ]; then
+  export LIFEV_CXXFLAGS="-O0 -g3"
+  export LIFEV_FLAGS="--enable-debug"
+elif [ $METHOD = prof ]; then
+  export LIFEV_CXXFLAGS="-O3 -pg -mtune=native -march=native -msse -msse2"
+  export LIFEV_FLAGS=""
+else
+  echo "$METHOD METHOD not recognized"; return 1
+fi
+
+LIFEV_LAPACK="-llapack_LINUX -lblas_LINUX -lpthread -lgfortran"
+
+cd ${LIFEV_BUILD}
+$LIFEV_HOME/lifev/configure --prefix="$LIFEV_HOME/lifev-install" \
+  CC="${OMPI_CC}" \
+  CXX="${OMPI_CXX}" \
+  FC="${OMPI_FC}" \
+  F77="${OMPI_F77}" \
+  CFLAGS="${LIFEV_CXXFLAGS}" \
+  CXXFLAGS="${LIFEV_CXXFLAGS}" \
+  LDFLAGS=$LIFEV_LDFLAGS \
+  $LIFEV_FLAGS \
+  --disable-shared \
+  --enable-static \
+  --with-parmetis="${REPO2}/ParMetis-3.1" \
+  --with-boost="/data/libs/boost/boost_1_36_0" \
+  --with-trilinos="$TRILINOS_HOME" \
+  --with-hdf5="${REPO1}/hdf5-1.6.10-install" \
+  --with-umfpack="${REPO}" \
+  --with-amd="${REPO}" \
+  --with-lapack-link-libs="-L${REPO1}/lapackO3-3.3.1 -L${REPO1}/BLASO3 ${LIFEV_LAPACK}" \
+  || echo "configure failed"

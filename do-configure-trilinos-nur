@@ -1,0 +1,78 @@
+export FFLAGS="-q64 -O3 -qxlines -qsuppress=1501-245 "
+export CC=mpcc_r
+export CXX=mpCC_r
+
+export TRILINOS_HOME=/sp6/usermisc/try0354d/trilinos10/source/
+EXTRA_ARGS=$@
+        
+cmake \
+          -D CMAKE_BUILD_TYPE:STRING=RELEASE \
+          -D BUILD_SHARED_LIBS:BOOL=OFF \
+          -D Epetra_ENABLE_WARNING_MESSAGES:BOOL=OFF \
+          -D CMAKE_Fortran_FLAGS:STRING="$FFLAGS " \
+          -D Trilinos_ENABLE_Epetra:BOOL=ON \
+          -D Trilinos_ENABLE_ForTrilinos:BOOL=OFF \
+          -D Trilinos_ENABLE_Stratimikos:BOOL=ON \
+          -D Trilinos_ENABLE_Fortran:BOOL=ON \
+          -D Trilinos_ENABLE_TrilinosFramework:BOOL=ON \
+          -D Trilinos_ENABLE_Teuchos:BOOL=ON \
+          -D Trilinos_ENABLE_Kokkos:BOOL=ON \
+          -D Trilinos_ENABLE_Zoltan:BOOL=ON \
+          -D Trilinos_ENABLE_Triutils:BOOL=ON \
+          -D Trilinos_ENABLE_Tpetra:BOOL=ON \
+          -D Trilinos_ENABLE_EpetraExt:BOOL=ON \
+          -D Trilinos_ENABLE_Thyra:BOOL=ON \
+          -D Trilinos_ENABLE_Isorropia:BOOL=ON \
+          -D Trilinos_ENABLE_AztecOO:BOOL=ON \
+          -D Trilinos_ENABLE_Galeri:BOOL=ON \
+          -D Trilinos_ENABLE_Amesos:BOOL=ON \
+          -D Trilinos_ENABLE_Ifpack:BOOL=ON \
+          -D Trilinos_ENABLE_ML:BOOL=ON \
+          -D Trilinos_ENABLE_Belos:BOOL=ON \
+          -D Trilinos_ENABLE_Ifpack2:BOOL=ON \
+          -D Trilinos_ENABLE_Anasazi:BOOL=ON \
+          -D Trilinos_ENABLE_Teko:BOOL=ON \
+          -D Trilinos_ENABLE_NOX:BOOL=ON \
+          -D Trilinos_ENABLE_Stokhos:BOOL=ON \
+          -D Trilinos_ENABLE_TriKota:BOOL=OFF \
+          -D Trilinos_ENABLE_TESTS:BOOL=OFF \
+          -D DART_TESTING_TIMEOUT:STRING=600 \
+          -D TPL_ENABLE_MPI:BOOL=ON \
+          -D CMAKE_C_FLAGS:STRING="$CFLAGS -q64 -qattr=full -qsuppress=1501-245 -qrtti=all -brtl -DH5_USE_16_API -O3 " \
+          -D CMAKE_CXX_FLAGS:STRING="$CXXFLAGS -q64 -qsuppress=1501-245 -qrtti=all -brtl -DH5_USE_16_API -O3 -qfullpath " \
+          -D TPL_ENABLE_BLAS:BOOL=ON \
+          -D BLAS_LIBRARY_NAMES:STRING="esslsmp" \
+          -D BLAS_LIBRARY_DIRS:PATH=/usr/lib \
+          -D TPL_ENABLE_LAPACK:BOOL=ON \
+          -D LAPACK_LIBRARY_DIRS:PATH=${LAPACK_LIB} \
+          -D TPL_LAPACK_LIBRARIES:FILEPATH="${LAPACK_LIB}/liblapack.a;/usr/lib/libxlf90.a" \
+          -D TPL_ENABLE_HDF5:BOOL=ON \
+          -D HDF5_LIBRARY_DIRS:PATH=${HDF5_LIB} \
+          -D TPL_HDF5_INCLUDE_DIRS:FILEPATH="${HDF5_INC}" \
+          -D TPL_HDF5_LIBRARY_DIRS:FILEPATH="${HDF5_LIB}/libhdf5.a" \
+          -D TPL_ENABLE_ParMETIS:BOOL=ON \
+          -D ParMETIS_LIBRARY_DIRS:PATH=${PARMETIS_HOME} \
+          -D TPL_ENABLE_UMFPACK:BOOL=ON \
+          -D UMFPACK_LIBRARY_DIRS:PATH=${CINECA_HOME}/suitesparse/source/SuiteSparse/UMFPACK/Lib \
+          -D UMFPACK_INCLUDE_DIRS:PATH=${CINECA_HOME}/suitesparse/source/SuiteSparse/UMFPACK/Include \
+          -D TPL_UMFPACK_INCLUDE_DIRS="${CINECA_HOME}/suitesparse/source/SuiteSparse/UMFPACK/Include" \
+          -D TPL_UMFPACK_LIBRARIES:FILEPATH="${CINECA_HOME}/suitesparse/source/SuiteSparse/UMFPACK/Lib/libumfpack.a;${CINECA_HOME}/suitesparse/source/SuiteSparse/AMD/Lib/libamd.a" \
+          -D TPL_ENABLE_AMD:BOOL=ON \
+          -D AMD_LIBRARY_DIRS:PATH=${CINECA_HOME}/suitesparse/source/SuiteSparse/AMD/Lib \
+          -D AMD_INCLUDE_DIRS:PATH=${CINECA_HOME}/suitesparse/source/SuiteSparse/AMD/Include \
+          -D TPL_AMD_INCLUDE_DIRS="${CINECA_HOME}/suitesparse/source/SuiteSparse/AMD/Include" \
+          -D TPL_ENABLE_Boost:BOOL=ON \
+          -D Boost_LIBRARY_DIRS:PATH=${BOOST_LIB} \
+          -D Boost_INCLUDE_DIRS:PATH=${BOOST_INC}/boost-1_34_1 \
+          -D TPL_Boost_INCLUDE_DIRS:FILEPATH="${BOOST_INC}/boost-1_34_1" \
+          -D TPL_ENABLE_Zlib:BOOL=ON \
+          -D Zlib_LIBRARY_DIRS:PATH=${ZLIB_LIB} \
+          -D Zlib_INCLUDE_DIRS:PATH=${ZLIB_INCLUDE} \
+          -D TPL_Zlib_INCLUDE_DIRS:FILEPATH=${ZLIB_INCLUDE} \
+          -D TPL_ENABLE_SCALAPACK:BOOL=OFF \
+          -D TPL_ENABLE_BLACS:BOOL=OFF \
+          -D TPL_ENABLE_PETSC:BOOL=OFF \
+          -D CMAKE_INSTALL_PREFIX="${CINECA_SCRATCH}/trilinos10/install" \
+          -D Trilinos_EXTRA_LINK_FLAGS:STRING="-L${SZLIB_LIB} -lsz -lgpfs -lm -I/cineca/prod/libraries/boost/1.34.1/xl--10.1/include/boost-1_34_1" \
+          ${EXTRA_ARGS} \
+          ${TRILINOS_HOME}

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+LIB_NAME="qhull"
+LIB_VERSION="2010.1"
+
+source ${HOME}/script/select-compiler
+
+BUILD_DIR=${HOME}/lib/${COMPILER}/${LIB_NAME}-build
+SOURCE_DIR=${HOME}/lib/${LIB_NAME}-${LIB_VERSION}
+INSTALL_DIR=${HOME}/lib/${COMPILER}/${LIB_NAME}-install
+
+CXX_FLAGS=${CXX_FLAGS_OPT}
+C_FLAGS=${CXX_FLAGS}
+
+mkdir -p ${BUILD_DIR}
+cd ${BUILD_DIR}
+rm -f CMakeCache.txt
+
+cmake \
+    -D CMAKE_INSTALL_PREFIX:PATH="${INSTALL_DIR}" \
+    -D CMAKE_C_COMPILER:STRING="${MPI_ROOT}/bin/mpicc" \
+    -D CMAKE_CXX_COMPILER:STRING="${MPI_ROOT}/bin/mpicxx" \
+    -D CMAKE_CXX_FLAGS:STRING="${CXX_FLAGS}" \
+    -D CMAKE_C_FLAGS:STRING="${C_FLAGS}" \
+    -D CMAKE_AR:STRING="${MYAR}" \
+    ${SOURCE_DIR} $*
+
